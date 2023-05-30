@@ -3,6 +3,7 @@ package service
 import (
 	"palo-alto/dictionary"
 	"palo-alto/util"
+	"strings"
 )
 
 type (
@@ -20,5 +21,5 @@ func New(dictionary dictionary.Dictionary) DictionaryReader {
 }
 
 func (s service) GetSimilar(word string) []string {
-	return s.dictionary.GetSimilar(util.SortString(word))
+	return s.dictionary.GetSimilar(util.SortString(strings.ToLower(word)))
 }
