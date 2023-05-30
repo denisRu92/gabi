@@ -22,7 +22,7 @@ func (api *API) getSimilar(writer http.ResponseWriter, req *http.Request, _ http
 
 		// Calculate processing time of request
 		start := time.Now()
-		defer api.m.ObserveProcessingTiming(start)
+		defer api.m.AddProcessingTiming(start)
 
 		// Get query parameter values
 		queryParams := req.URL.Query()

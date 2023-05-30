@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
-	"log"
 	"net/http"
-	"palo-alto/conf"
+	"palo-alto/config"
 	logger "palo-alto/logging"
 	"palo-alto/metric"
 	"palo-alto/service"
@@ -14,25 +13,20 @@ import (
 
 // API serves the end users requests.
 type API struct {
-	cfg     conf.Config
-	m       *metric.Metric
+	cfg     config.Config
+	m       metric.Metric
 	Router  *httprouter.Router
 	server  *http.Server
 	service service.DictionaryHandler
 }
 
 // New return new API instance
-func New(cfg conf.Config, m *metric.Metric, service service.DictionaryHandler) *API {
+func New(cfg config.Config, m metric.Metric, service service.DictionaryHandler) *API {
 	return &API{
 		cfg:     cfg,
 		m:       m,
 		service: service,
 	}
-}
-
-// Title returns the title.
-func (api *API) Title() string {
-	return "API"
 }
 
 // Start starts the http server and binds the handlers.
@@ -85,7 +79,7 @@ func (api *API) registerRoutes(method, path string, handler httprouter.Handle, m
 }
 
 func (api *API) startServer() {
-	log.Printf("Listening on port %s", api.cfg.Port)
+	logger.Log.Infof("Listening on port %s", api.cfg.Port)
 	if err := api.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		logger.Log.Fatal("Error can't launch the server on port: " + api.cfg.Port)
 	}

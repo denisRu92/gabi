@@ -3,7 +3,7 @@ package fileDictionary
 import (
 	"bufio"
 	"os"
-	"palo-alto/conf"
+	"palo-alto/config"
 	"palo-alto/dictionary"
 	logger "palo-alto/logging"
 	"palo-alto/metric"
@@ -12,20 +12,50 @@ import (
 )
 
 type fileDictionary struct {
-	cfg          conf.Config
-	m            *metric.Metric
+	cfg          config.Config
+	m            metric.Metric
 	permutations map[string][]string
+
+	permutationsCh chan permutationsReq
+	addWordCh      chan string
+	stopCh         chan struct{}
+}
+
+type permutationsReq struct {
+	key    string
+	respCh chan []string
 }
 
 // New return new FileDictionary instance
-func New(cfg conf.Config, m *metric.Metric) dictionary.Dictionary {
+func New(cfg config.Config, m metric.Metric) dictionary.Dictionary {
 	fs := &fileDictionary{
 		cfg:          cfg,
 		m:            m,
 		permutations: make(map[string][]string),
+
+		permutationsCh: make(chan permutationsReq),
+		addWordCh:      make(chan string),
+		stopCh:         make(chan struct{}),
 	}
 
 	return fs
+}
+
+func (fd *fileDictionary) Start() {
+	for {
+		select {
+		case word := <-fd.addWordCh:
+			fd.addWord(word)
+		case req := <-fd.permutationsCh:
+			req.respCh <- fd.getSimilar(req.key)
+		case <-fd.stopCh:
+			return
+		}
+	}
+}
+
+func (fd *fileDictionary) Stop() {
+	close(fd.stopCh)
 }
 
 // Initialize init FileDictionary
@@ -43,13 +73,9 @@ func (fd *fileDictionary) Initialize() error {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		wordCount++
-		currWord := strings.TrimSpace(scanner.Text())
-		key := util.SortString(currWord)
-
-		fd.permutations[key] = append(fd.permutations[key], currWord)
+		fd.AddWord(scanner.Text())
 	}
 
-	fd.m.AddWordCounter(int64(wordCount))
 	logger.Log.Infof("Init %d words to dictionary", wordCount)
 
 	if err := scanner.Err(); err != nil {
@@ -58,10 +84,33 @@ func (fd *fileDictionary) Initialize() error {
 	return nil
 }
 
-// GetSimilar returns array of permutation if exists else empty array
 func (fd *fileDictionary) GetSimilar(key string) []string {
+	respCh := make(chan []string)
+	fd.permutationsCh <- permutationsReq{
+		respCh: respCh,
+		key:    key,
+	}
+
+	return <-respCh
+}
+
+// getSimilar returns array of permutation if exists else empty array
+func (fd *fileDictionary) getSimilar(key string) []string {
 	if val, ok := fd.permutations[key]; ok {
 		return val
 	}
 	return []string{}
+}
+
+func (fd *fileDictionary) AddWord(word string) {
+	fd.addWordCh <- word
+}
+
+// addWord adds a new word to the permutations dictionary
+func (fd *fileDictionary) addWord(word string) {
+	currWord := strings.TrimSpace(word)
+	key := util.SortString(currWord)
+
+	fd.permutations[key] = append(fd.permutations[key], currWord)
+	fd.m.IncWordCounter()
 }
