@@ -1,4 +1,4 @@
-package fileDictionary
+package file_dictionary
 
 import (
 	"bufio"

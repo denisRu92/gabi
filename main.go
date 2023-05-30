@@ -5,9 +5,9 @@ import (
 	"os/signal"
 	"palo-alto/api"
 	"palo-alto/config"
-	"palo-alto/dictionary/fileDictionary"
+	dictionary "palo-alto/dictionary/file_dictionary"
 	logger "palo-alto/logging"
-	"palo-alto/metric/localMetric"
+	metric "palo-alto/metric/local_metric"
 	"palo-alto/service"
 	"syscall"
 )
@@ -21,12 +21,12 @@ func main() {
 	}
 
 	// Init metrics
-	m := localMetric.New()
+	m := metric.New()
 	go m.Start()
 	defer m.Stop()
 
 	// Init dictionary
-	d := fileDictionary.New(cfg, m)
+	d := dictionary.New(cfg, m)
 	go d.Start()
 	defer d.Stop()
 	err = d.Initialize()

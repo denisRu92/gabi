@@ -1,4 +1,4 @@
-package localMetric
+package local_metric
 
 import (
 	"palo-alto/metric"
@@ -20,7 +20,7 @@ type avgProcessingTimeReq struct {
 	respCh chan int64
 }
 
-// New return localMetric
+// New return local_metric
 func New() metric.Metric {
 	return &localMetric{
 		wordCounter:             0,

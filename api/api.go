@@ -17,11 +17,11 @@ type API struct {
 	m       metric.Metric
 	Router  *httprouter.Router
 	server  *http.Server
-	service service.DictionaryHandler
+	service service.DictionaryReader
 }
 
 // New return new API instance
-func New(cfg config.Config, m metric.Metric, service service.DictionaryHandler) *API {
+func New(cfg config.Config, m metric.Metric, service service.DictionaryReader) *API {
 	return &API{
 		cfg:     cfg,
 		m:       m,

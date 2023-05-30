@@ -6,7 +6,7 @@ import (
 )
 
 type (
-	DictionaryHandler interface {
+	DictionaryReader interface {
 		GetSimilar(word string) []string
 	}
 
@@ -15,7 +15,7 @@ type (
 	}
 )
 
-func New(dictionary dictionary.Dictionary) DictionaryHandler {
+func New(dictionary dictionary.Dictionary) DictionaryReader {
 	return &service{dictionary: dictionary}
 }
 
