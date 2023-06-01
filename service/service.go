@@ -30,7 +30,9 @@ func (s service) GetSimilar(word string) []string {
 func (s service) removeWord(word string, permutations []string) []string {
 	for i := 0; i < len(permutations); i++ {
 		if word == permutations[i] {
-			return append(permutations[:i], permutations[i+1:]...)
+			result := make([]string, 0, len(permutations)-1)
+			result = append(result, permutations[:i]...)
+			return append(result, permutations[i+1:]...)
 		}
 	}
 
